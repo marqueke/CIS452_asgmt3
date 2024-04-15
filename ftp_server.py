@@ -9,10 +9,12 @@ def client_connection(client_socket):
             if not command:
                 break  # close client connection
             print(f"Received command: {command}")
+            
             if command.startswith("LIST"):
                 files = os.listdir('.')
                 files_list = '\n'.join(files)
                 client_socket.sendall(files_list.encode())
+                
             elif command.startswith("RETRIEVE"):
                 filename = command.split()[1]
                 try:
@@ -21,19 +23,22 @@ def client_connection(client_socket):
                         client_socket.sendall(data)
                 except FileNotFoundError:
                     client_socket.sendall(b"Error. File not found.")
+                    
             elif command.startswith("STORE"):
                 filename = command.split()[1]
                 # client sends file size first for file transfer
-                file_data = client_socket.recv(1024)
+                file_size = int(client_socket.recv(1024).decode().split(':')[0])
+                received_size = 0
                 with open(filename, 'wb') as f:
-                    while file_data:
-                        f.write(file_data)
-                        client_socket.settimeout(1) # timeout to detect end of file
-                        try:
-                            file_data = client_socket.recv(1024)
-                        except socket.timeout:
+                    while received_size < file_size:
+                        chunk_size = min(1024, file_size - received_size)
+                        file_data = client_socket.recv(chunk_size)
+                        if not file_data:
                             break
+                        f.write(file_data)
+                        received_size += len(file_data)
                 print(f"File '{filename}' stored successfully")
+                
             elif command == "QUIT":
                 client_socket.sendall(b"Connection closed.")
                 break
