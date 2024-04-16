@@ -8,7 +8,7 @@ def client_connection(client_socket):
             command = client_socket.recv(1024).decode()
             if not command:
                 break  # close client connection
-            print(f"Received command: {command}")
+            print("Received command: {}".format(command))
             if command.startswith("LIST"):
                 files = os.listdir('.')
                 files_list = '\n'.join(files)
@@ -33,7 +33,7 @@ def client_connection(client_socket):
                             file_data = client_socket.recv(1024)
                         except socket.timeout:
                             break
-                print(f"File '{filename}' stored successfully")
+                print("File '{}' stored successfully".format(filename))
             elif command == "QUIT":
                 client_socket.sendall(b"Connection closed.")
                 break
@@ -45,12 +45,12 @@ def start_server(port):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('', port))
     server_socket.listen(5)
-    print(f"FTP server is listening on port {port}...")
+    print("FTP server is listening on port {}...".format(port))
     
     try:
         while True:
             client_socket, addr = server_socket.accept()
-            print(f"Connected to {addr}")
+            print("Connected to {}".format(addr))
             client_thread = threading.Thread(target=client_connection, 
                                              args=(client_socket,))
             client_thread.start()
@@ -60,4 +60,4 @@ def start_server(port):
 
 if __name__ == "__main__":
     PORT = 2121 # example port
-    start_server(PORT)
+    start_server(PORT) 

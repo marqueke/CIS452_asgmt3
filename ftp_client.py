@@ -18,17 +18,26 @@ def ftp_client(server_address, server_port):
             files_list = client_socket.recv(1024).decode()
             print(files_list)
         elif command.startswith("RETRIEVE"):
-            filename = command.split()[1]
-            file_data = client_socket.recv(1024)
+            # Check if the command has at least two parts separated by space
+            parts = command.split()
+            if len(parts) < 2:
+                print("Invalid command. Usage: RETRIEVE filename")
+                continue
+
+            filename = parts[1]
             with open(filename, 'wb') as file:
-                file.write(file_data)
-            print(f"File '{filename}' retrieved successfully")
+                while True:
+                    file_data = client_socket.recv(1024)
+                    if not file_data:
+                        break
+                    file.write(file_data)
+            print("File '{}' retrieved successfully".format(filename))  # Moved print statement
         elif command.startswith("STORE"):
             filename = command.split()[1]
             with open(filename, 'rb') as file:
                 file_data = file.read()
             client_socket.send(file_data)
-            print(f"File '{filename}' stored successfully")
+            print("File '{}' stored successfully".format(filename))
         elif command.startswith("QUIT"):
             client_socket.close()
             break
